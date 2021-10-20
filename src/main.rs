@@ -1,3 +1,5 @@
+extern crate serde;
+
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 use domain::contract_store::ContractStore;
@@ -48,7 +50,8 @@ fn build_cli() -> ArgMatches<'static> {
 fn main() {
     let matches = build_cli();
     let mut contract_store = ContractStore::new();
-    let mut event_router = EventRouter::new(&mut contract_store);
+    let mut event_router = EventRouter::load_from_disk(&mut contract_store);
+    // let mut event_router = EventRouter::new(&mut contract_store);
 
     match matches.subcommand_name() {
         Some(CMD_LIST) => list_contracts(&contract_store),
