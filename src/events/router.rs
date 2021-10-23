@@ -9,13 +9,13 @@ use std::path::Path;
 const DEFAULT_FILE_NAME: &str = "history.bin";
 
 pub struct EventRouter<'a> {
-    contract_store: &'a ContractStore,
+    contract_store: &'a mut ContractStore,
     events: Vec<Event>,
     data_file_name: String,
 }
 
 impl<'a> EventRouter<'a> {
-    pub fn new(contract_store: &'a ContractStore) -> Self {
+    pub fn new(contract_store: &'a mut ContractStore) -> Self {
         EventRouter {
             contract_store,
             events: vec![],
@@ -25,15 +25,15 @@ impl<'a> EventRouter<'a> {
 
     pub fn post(&mut self, event: Event) {
         println!("Posted event: {:?}", event);
-        self.process(&event);
+        EventRouter::process(&mut self.contract_store, &event);
         self.persist(&event);
         self.events.push(event);
     }
 
-    fn process(&self, event: &Event) {
+    fn process(contract_store: &mut ContractStore, event: &Event) {
         match &event {
-            ContractConcluded { name } => self.contract_store.create(&name),
-            ContractDeleted { id } => self.contract_store.delete(*id),
+            ContractConcluded { name } => contract_store.create(&name),
+            ContractDeleted { id } => contract_store.delete(*id),
         };
     }
 
@@ -50,7 +50,7 @@ impl<'a> EventRouter<'a> {
         writer.write( json_str.as_bytes()).expect(&format!("Failed to write event {:?} to disk.", event));
     }
 
-    pub fn load_from_disk(contract_store: &'a ContractStore) -> Self {
+    pub fn load_from_disk(contract_store: &'a mut ContractStore) -> Self {
         let mut events: Vec<Event> = vec![];
 
         if Path::exists(Path::new(DEFAULT_FILE_NAME)) {
@@ -68,7 +68,7 @@ impl<'a> EventRouter<'a> {
                 });
         }
 
-        let router = EventRouter {
+        let mut router = EventRouter {
             contract_store,
             events,
             data_file_name: String::from("history.bin"),
@@ -78,7 +78,7 @@ impl<'a> EventRouter<'a> {
         router
     }
 
-    fn replay(&self) {
-        self.events.iter().for_each(|e| self.process(e))
+    fn replay(&mut self) {
+        self.events.iter().for_each(|e| EventRouter::process(&mut self.contract_store, e))
     }
 }
