@@ -83,12 +83,12 @@ fn list_contracts(contract_store: &ContractStore) {
         .for_each(|c| println!("{:?}", c))
 }
 
-fn add_contract(event_router: &EventRouter, name: &str) {
+fn add_contract(event_router: &mut EventRouter, name: &str) {
     event_router.post(ContractConcluded {
         name: String::from(name),
     })
 }
 
-fn delete_contract(event_router: &EventRouter, id: u32) {
+fn delete_contract(event_router: &mut EventRouter, id: u32) {
     event_router.post(ContractDeleted { id })
 }

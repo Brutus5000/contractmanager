@@ -10,7 +10,7 @@ const DEFAULT_FILE_NAME: &str = "history.bin";
 
 pub struct EventRouter<'a> {
     contract_store: &'a ContractStore,
-    events: RefCell<Vec<Event>>,
+    events: Vec<Event>,
     data_file_name: String,
 }
 
@@ -18,16 +18,16 @@ impl<'a> EventRouter<'a> {
     pub fn new(contract_store: &'a ContractStore) -> Self {
         EventRouter {
             contract_store,
-            events: RefCell::new(vec![]),
+            events: vec![],
             data_file_name: String::from(DEFAULT_FILE_NAME),
         }
     }
 
-    pub fn post(&self, event: Event) {
+    pub fn post(&mut self, event: Event) {
         println!("Posted event: {:?}", event);
         self.process(&event);
         self.persist(&event);
-        self.events.borrow_mut().push(event);
+        self.events.push(event);
     }
 
     fn process(&self, event: &Event) {
@@ -70,7 +70,7 @@ impl<'a> EventRouter<'a> {
 
         let router = EventRouter {
             contract_store,
-            events: RefCell::new(events),
+            events,
             data_file_name: String::from("history.bin"),
         };
         router.replay();
@@ -79,6 +79,6 @@ impl<'a> EventRouter<'a> {
     }
 
     fn replay(&self) {
-        self.events.borrow().iter().for_each(|e| self.process(e))
+        self.events.iter().for_each(|e| self.process(e))
     }
 }
